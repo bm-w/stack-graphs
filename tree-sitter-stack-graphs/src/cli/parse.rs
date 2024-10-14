@@ -40,19 +40,19 @@ impl ParseArgs {
                 None => return Err(anyhow!("No stack graph language found")),
             };
         let source = file_reader.get(&self.source_path)?;
-        let tree = parse(lang, &self.source_path, source)?;
+        let tree = parse(&lang, &self.source_path, source)?;
         print_tree(tree);
         Ok(())
     }
 }
 
 pub(super) fn parse(
-    language: tree_sitter::Language,
+    language: &tree_sitter::Language,
     path: &Path,
     source: &str,
 ) -> anyhow::Result<tree_sitter::Tree> {
     let mut parser = Parser::new();
-    parser.set_language(language)?;
+    parser.set_language(&language)?;
     let tree = parser.parse(source, None).ok_or(BuildError::ParseError)?;
     let parse_errors = ParseError::into_all(tree);
     if parse_errors.errors().len() > 0 {

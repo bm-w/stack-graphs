@@ -27,8 +27,8 @@ pub(self) fn build_stack_graph(
     tsg_source: &str,
 ) -> Result<(StackGraph, Handle<File>), BuildError> {
     let file_name = "test.py";
-    let language =
-        StackGraphLanguage::from_str(tree_sitter_python::language(), tsg_source).unwrap();
+    let language = tree_sitter::Language::new(tree_sitter_python::LANGUAGE);
+    let language = StackGraphLanguage::from_str(language, tsg_source).unwrap();
     let mut graph = StackGraph::new();
     let file = graph.get_or_create_file(file_name);
     let mut globals = Variables::new();

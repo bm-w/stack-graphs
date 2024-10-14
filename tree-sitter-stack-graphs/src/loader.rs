@@ -68,13 +68,14 @@ impl LanguageConfiguration {
         builtins_config: Option<&str>,
         cancellation_flag: &dyn CancellationFlag,
     ) -> Result<Self, LoadError<'a>> {
-        let sgl = StackGraphLanguage::from_source(language, tsg_path.clone(), tsg_source).map_err(
-            |err| LoadError::SglParse {
-                inner: err,
-                tsg_path,
-                tsg: Cow::from(tsg_source),
-            },
-        )?;
+        let sgl = StackGraphLanguage::from_source(language.clone(), tsg_path.clone(), tsg_source)
+            .map_err(
+                |err| LoadError::SglParse {
+                    inner: err,
+                    tsg_path,
+                    tsg: Cow::from(tsg_source),
+                },
+            )?;
         let mut builtins = StackGraph::new();
         if let Some((builtins_path, builtins_source)) = builtins_source {
             let mut builtins_globals = Variables::new();
@@ -499,7 +500,7 @@ impl LanguageConfigurationsLoader {
     ) -> Result<Option<tree_sitter::Language>, LoadError<'static>> {
         for configuration in self.configurations.iter() {
             if configuration.matches_file(path, content)? {
-                return Ok(Some(configuration.language));
+                return Ok(Some(configuration.language.clone()));
             }
         }
         Ok(None)
@@ -569,7 +570,7 @@ impl PathLoader {
         content: &mut dyn ContentProvider,
     ) -> Result<Option<tree_sitter::Language>, LoadError<'static>> {
         if let Some(selected_language) = self.select_language_for_file(path, content)? {
-            return Ok(Some(selected_language.language));
+            return Ok(Some(selected_language.language.clone()));
         }
         Ok(None)
     }
@@ -591,7 +592,7 @@ impl PathLoader {
             Some(index) => index,
             None => {
                 let tsg = self.load_tsg_from_paths(&language)?;
-                let sgl = StackGraphLanguage::new(language.language, tsg);
+                let sgl = StackGraphLanguage::new(language.language.clone(), tsg);
 
                 let mut builtins = StackGraph::new();
                 self.load_builtins_from_paths_into(
@@ -602,7 +603,7 @@ impl PathLoader {
                 )?;
 
                 let lc = LanguageConfiguration {
-                    language: language.language,
+                    language: language.language.clone(),
                     scope: language.scope,
                     content_regex: language.content_regex,
                     file_types: language.file_types,
@@ -696,7 +697,7 @@ impl PathLoader {
             }
             if tsg_path.exists() {
                 let tsg_source = std::fs::read_to_string(tsg_path)?;
-                return Loader::load_tsg(language.language, Cow::from(tsg_source));
+                return Loader::load_tsg(language.language.clone(), Cow::from(tsg_source));
             }
         }
         return Err(LoadError::NoTsgFound);
@@ -786,12 +787,12 @@ impl SupplementedTsLoader {
                 .map_err(LoadError::TreeSitter)?;
             let configurations = self
                 .0
-                .find_language_configurations_at_path(&path)
+                .find_language_configurations_at_path(&path, false)
                 .map_err(LoadError::TreeSitter)?;
             let languages = languages
                 .into_iter()
                 .zip(configurations.into_iter())
-                .map(SupplementedLanguage::from)
+                .map(|((language, _), config)| SupplementedLanguage::from((language, config)))
                 .filter(|language| scope.map_or(true, |scope| language.matches_scope(scope)))
                 .collect::<Vec<_>>();
             self.1.insert(path.to_path_buf(), languages);

@@ -2644,7 +2644,7 @@ if none @is_async {
   (call_expression)
   (class)
   (false)
-  (function)
+  (function_expression)
   (generator_function)
   (import)
   (member_expression)
@@ -2815,7 +2815,7 @@ if none @is_async {
   (decorator (call_expression function:(member_expression object:(member_expression object:(member_expression object:(identifier)@name)))))
 ; #dialect tsx
   (nested_identifier (identifier)@name)
-  (nested_identifier (nested_identifier)@name)
+  (nested_identifier (member_expression)@name)
   (nested_type_identifier module:(nested_identifier)@name)
   (internal_module name:(_)@name)
   (jsx_opening_element name: (_)@name)
@@ -2870,7 +2870,7 @@ if none @is_def {
   (decorator (call_expression function:(member_expression object:(member_expression object:(identifier)@name))))
   (decorator (call_expression function:(member_expression object:(member_expression object:(member_expression object:(identifier)@name)))))
 ; #dialect tsx
-  (nested_identifier (identifier)@name (identifier)) ; to pick up foo in JSX: <foo.bar.baz />
+  (nested_identifier (identifier)@name (property_identifier)) ; to pick up foo in JSX: <foo.bar.baz />
   (jsx_opening_element name: (identifier)@name)
   (jsx_closing_element name: (identifier)@name)
   (jsx_self_closing_element name: (identifier)@name)
@@ -3259,20 +3259,20 @@ if none @is_def {
 
 ; function (x) {};
 
-; (function
+; (function_expression
 ;   (formal_parameters (identifier))
 ;   (statement_block))
 
 ; this captures the parameters
-; (function
+; (function_expression
 ;   parameters: (_)@params)
 
 ; this captures the body
-; (function
+; (function_expression
 ;   body:(_)@body)@function
 
 ; functions with names
-; (function
+; (function_expression
 ;   name:(_)@name
 ;   parameters:(_)@call_sig)@fun {
 ; }
@@ -3307,7 +3307,7 @@ if none @is_def {
 ; }
 
 [
-  (function)
+  (function_expression)
   (arrow_function)
   (generator_function)
 ]@fun {
@@ -3334,9 +3334,9 @@ if none @is_def {
 }
 
 [
-  (function           parameters:(_)@call_sig)
-  (arrow_function     parameters:(_)@call_sig)
-  (generator_function parameters:(_)@call_sig)
+  (function_expression parameters:(_)@call_sig)
+  (arrow_function      parameters:(_)@call_sig)
+  (generator_function  parameters:(_)@call_sig)
 ]@fun {
   ; propagate lexical scope
   edge @call_sig.lexical_scope -> @fun.lexical_scope
@@ -3385,9 +3385,9 @@ if none @is_def {
 }
 
 [
-  (function           body:(_)@body)
-  (arrow_function     body:(_)@body)
-  (generator_function body:(_)@body)
+  (function_expression body:(_)@body)
+  (arrow_function      body:(_)@body)
+  (generator_function  body:(_)@body)
 ]@fun {
   ; propagate lexical scope
   edge @body.lexical_scope -> @fun.lexical_scope
@@ -3396,8 +3396,8 @@ if none @is_def {
 ;;;; specified return type
 
 [
-  (function return_type:(_)@return_type)
-  (arrow_function return_type:(_)@return_type)
+  (function_expression return_type:(_)@return_type)
+  (arrow_function      return_type:(_)@return_type)
 ]@fun {
   ; propagate lexical scope
   edge @return_type.lexical_scope -> @fun.lexical_scope
@@ -3409,8 +3409,8 @@ if none @is_def {
 ;;;; inferred return type
 
 [
-  (function       "async"?@is_async !return_type body:(_)@body)
-  (arrow_function "async"?@is_async !return_type body:(statement_block)@body)
+  (function_expression "async"?@is_async !return_type body:(_)@body)
+  (arrow_function      "async"?@is_async !return_type body:(statement_block)@body)
 ]@fun {
 if none @is_async {
   ; callable is type of return statement
@@ -3428,8 +3428,8 @@ if none @is_async {
 ;;;; inferred async return type
 
 [
-  (function       "async" !return_type body:(_)@body)
-  (arrow_function "async"              body:(statement_block)@body)
+  (function_expression "async" !return_type body:(_)@body)
+  (arrow_function      "async"              body:(statement_block)@body)
 ]@fun_decl {
   ; function returns body return type
   edge @fun_decl.callable__return -> @fun_decl.async_type
@@ -3554,12 +3554,12 @@ if none @is_async {
   )@member_expr
 ; #dialect tsx
   (nested_identifier
-    (nested_identifier)@object
-    (identifier)@prop
+    (member_expression)@object
+    (property_identifier)@prop
   )@member_expr
   (nested_identifier
     (identifier)@object
-    (identifier)@prop
+    (property_identifier)@prop
   )@member_expr
 ; #end
  ] {
@@ -3890,13 +3890,9 @@ if none @is_async {
 
 ; (sequence_expression (number) (number))
 
-(sequence_expression
-  left: (_)@left
-  right: (_)@right
-)@sequence_expr {
+(sequence_expression (_)@rule)@sequence_expr {
   ; propagate lexical scope
-  edge @left.lexical_scope -> @sequence_expr.lexical_scope
-  edge @right.lexical_scope -> @sequence_expr.lexical_scope
+  edge @rule.lexical_scope -> @sequence_expr.lexical_scope
 
   ; FIXME @sequence_expr.type is type of last, but cannot express because of nesting
 }
@@ -4972,6 +4968,7 @@ if none @is_acc {
   (mapped_type_clause)
   (nested_type_identifier)
   (object_type)
+  (interface_body)
   (omitting_type_annotation)
   (opting_type_annotation)
   (optional_type)
@@ -6159,7 +6156,7 @@ if none @is_acc {
 
 [
   (arrow_function                 "async")
-  (function                       "async")
+  (function_expression            "async")
   (function_declaration           "async")
   (generator_function             "async")
   (generator_function_declaration "async")
@@ -6221,29 +6218,10 @@ if none @is_acc {
   [
     (jsx_text)
     (jsx_element)
-    (jsx_fragment)
     (jsx_self_closing_element)
     (jsx_expression)
   ]@child
 )@parent {
-  edge @child.lexical_scope -> @parent.lexical_scope
-}
-
-(jsx_fragment)@fragment {
-  node @fragment.lexical_scope
-  node @fragment.value
-  node @fragment.type
-}
-
-(jsx_fragment
-  [
-    (jsx_text)
-    (jsx_element)
-    (jsx_fragment)
-    (jsx_self_closing_element)
-    (jsx_expression)
-  ]@child
-) @parent {
   edge @child.lexical_scope -> @parent.lexical_scope
 }
 

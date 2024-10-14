@@ -72,8 +72,8 @@ fn build_stack_graph_into(
     tsg_source: &str,
     globals: &Variables,
 ) -> Result<(), BuildError> {
-    let language =
-        StackGraphLanguage::from_str(tree_sitter_python::language(), tsg_source).unwrap();
+    let language = tree_sitter::Language::new(tree_sitter_python::LANGUAGE);
+    let language = StackGraphLanguage::from_str(language, tsg_source).unwrap();
     language.build_stack_graph_into(graph, file, python_source, globals, &NoCancellation)?;
     Ok(())
 }

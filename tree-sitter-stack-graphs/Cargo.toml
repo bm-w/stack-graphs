@@ -74,13 +74,13 @@ thiserror = "1.0"
 time = { version = "0.3", optional = true }
 tokio = { version = "1.26", optional = true, features = ["io-std", "rt", "rt-multi-thread"] }
 tower-lsp = { version = "0.19", optional = true }
-tree-sitter = "0.20" # keep the same minor version as the tree-sitter dependency
+tree-sitter = "0.24" # keep the same minor version as the tree-sitter dependency
                      # of tree-sitter-graph to prevent install problems
-tree-sitter-config = { version = "0.19", optional = true }
-tree-sitter-graph = "0.11"
-tree-sitter-loader = "0.20"
+tree-sitter-config = { version = "0.24.3", optional = true }
+tree-sitter-graph = { path = "../../tree-sitter/tree-sitter-graph" }
+tree-sitter-loader = "0.24.3"
 walkdir = { version = "2.3", optional = true }
 
 [dev-dependencies]
 pretty_assertions = "0.7"
-tree-sitter-python = "=0.19.1"
+tree-sitter-python = "0.23.2"
