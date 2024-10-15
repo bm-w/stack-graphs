@@ -2335,6 +2335,7 @@ if none @is_async {
   (ambient_declaration (module                  name:(string)    @name))
   ; X._
   (nested_identifier                                 (identifier)@name)
+  (nested_identifier                                 (property_identifier)@name)
 ] {
   node @name.expr_def
   node expr_def_typeof
@@ -2816,11 +2817,12 @@ if none @is_async {
 ; #dialect tsx
   (nested_identifier (identifier)@name)
   (nested_identifier (member_expression)@name)
+  (member_expression (identifier)@name)
   (nested_type_identifier module:(nested_identifier)@name)
   (internal_module name:(_)@name)
-  (jsx_opening_element name: (_)@name)
-  (jsx_closing_element name: (_)@name)
-  (jsx_self_closing_element name: (_)@name)
+  (jsx_opening_element name: [(identifier) (jsx_namespace_name)]@name)
+  (jsx_closing_element name: [(identifier) (jsx_namespace_name)]@name)
+  (jsx_self_closing_element name: [(identifier) (jsx_namespace_name)]@name)
 ; #end
 ] {
 if none @is_def {
@@ -3569,6 +3571,7 @@ if none @is_async {
 
   ; propagate lexical scope
   edge @object.lexical_scope -> @member_expr.lexical_scope
+  ;            ^ WIP: Undefined?
 
   ; reference to property
   attr (@prop.expr_ref) node_reference = @prop
@@ -4951,6 +4954,7 @@ if none @is_acc {
 
 [
   (array_type)
+  (asserts_annotation)
   (asserts)
   (conditional_type)
   (constraint)
@@ -5066,6 +5070,12 @@ if none @is_acc {
 )@asserts {
   ; propagate lexical scope
   edge @type.lexical_scope -> @asserts.lexical_scope
+}
+
+(asserts_annotation
+  (_)@asserts
+)@asserts_annotation {
+  edge @asserts.lexical_scope -> @asserts_annotation.lexical_scope
 }
 
 
@@ -5594,6 +5604,7 @@ if none @is_acc {
   (nested_type_identifier module:(identifier)@name)
   ; X._, _.X._
   (nested_identifier (identifier)@name)
+  (nested_identifier (property_identifier)@name)
 ] {
   node @name.type_ref
   attr (@name.type_ref) node_reference = @name
@@ -6228,9 +6239,9 @@ if none @is_acc {
 (jsx_element
   open_tag: (jsx_opening_element !name)
 )@jsx_element {
-  node @jsx_element.lexical_scope
+  ; node @jsx_element.lexical_scope
   node @jsx_element.value
-  node @jsx_element.type
+  ; node @jsx_element.type
 }
 
 (jsx_element
@@ -6273,7 +6284,7 @@ if none @is_acc {
 }
 
 (jsx_namespace_name (_) @lhs (_) @rhs)@name {
-  node @name.lexical_scope
+  ; node @name.lexical_scope
 
   edge @lhs.lexical_scope -> @name.lexical_scope
   edge @rhs.lexical_scope -> @name.lexical_scope
