@@ -6225,6 +6225,26 @@ if none @is_acc {
   edge @child.lexical_scope -> @parent.lexical_scope
 }
 
+(jsx_element
+  open_tag: (jsx_opening_element !name)
+)@jsx_element {
+  node @jsx_element.lexical_scope
+  node @jsx_element.value
+  node @jsx_element.type
+}
+
+(jsx_element
+  open_tag: (jsx_opening_element !name)
+  [
+    (jsx_text)
+    (jsx_element)
+    (jsx_self_closing_element)
+    (jsx_expression)
+  ]@child
+) @parent {
+  edge @child.lexical_scope -> @parent.lexical_scope
+}
+
 (jsx_text)@jsx_text {
   node @jsx_text.lexical_scope
 }
