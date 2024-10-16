@@ -2362,7 +2362,7 @@ if none @is_async {
 
 [
   (nested_identifier . (_) @mod)
-  (member_expression object: (_) @mod)
+  (member_expression object: [(identifier) (member_expression)] @mod)
 ] @nested {
   node @nested.expr_def
   node @nested.type_def
@@ -2373,7 +2373,7 @@ if none @is_async {
 
 [
   (nested_identifier . (_) @mod . (_) @name .)
-  (member_expression object: (_) @mod property: (_) @name)
+  (member_expression object: [(identifier) (member_expression)] @mod property: (_) @name)
 ] {
   edge @mod.expr_def_member -> @name.expr_def
   edge @mod.type_def_member -> @name.type_def
@@ -2661,6 +2661,9 @@ if none @is_async {
   (import)
   (member_expression)
   (meta_property)
+  ; FIXME Not ideal, but made necessary because of the `member_expression`
+  ;       alias within `nested_identifier` (see another FIXME below for
+  ;       details).
   (nested_identifier)
   (new_expression)
   (non_null_expression)
@@ -2861,12 +2864,25 @@ if none @is_async {
   (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name))))))))))))))))))))))))
 ; #dialect tsx
   (nested_identifier (identifier)@name)
-  (nested_identifier (member_expression)@name)
-  (nested_type_identifier module:(nested_identifier)@name)
-  (internal_module name:(_)@name)
+  (internal_module name: (identifier)@name)
   (jsx_opening_element name: [(identifier) (jsx_namespace_name)]@name)
   (jsx_closing_element name: [(identifier) (jsx_namespace_name)]@name)
   (jsx_self_closing_element name: [(identifier) (jsx_namespace_name)]@name)
+  ; FIXME For whatever when the name of JSX element is a
+  ;       `nested_identifier` it is aliased as `member_expression`.
+  ;       See the above FIXME.
+  (jsx_opening_element name: (member_expression object:(identifier)@name))
+  (jsx_opening_element name: (member_expression (member_expression object:(identifier)@name)))
+  (jsx_opening_element name: (member_expression (member_expression (member_expression object:(identifier)@name))))
+  (jsx_opening_element name: (member_expression (member_expression (member_expression (member_expression object:(identifier)@name)))))
+  (jsx_closing_element name: (member_expression object:(identifier)@name))
+  (jsx_closing_element name: (member_expression (member_expression object:(identifier)@name)))
+  (jsx_closing_element name: (member_expression (member_expression (member_expression object:(identifier)@name))))
+  (jsx_closing_element name: (member_expression (member_expression (member_expression (member_expression object:(identifier)@name)))))
+  (jsx_self_closing_element name: (member_expression object:(identifier)@name))
+  (jsx_self_closing_element name: (member_expression (member_expression object:(identifier)@name)))
+  (jsx_self_closing_element name: (member_expression (member_expression (member_expression object:(identifier)@name))))
+  (jsx_self_closing_element name: (member_expression (member_expression (member_expression (member_expression object:(identifier)@name)))))
 ; #end
 ] {
 if none @is_def {
@@ -5657,7 +5673,7 @@ if none @is_acc {
 
 [
   (nested_identifier . (_)@mod)
-  (member_expression object: (_)@mod)
+  (member_expression object: [(identifier) (member_expression)]@mod)
 ] @nested {
   node @nested.type_ref
   edge @mod.type_ref -> @nested.type_ref
@@ -5665,7 +5681,7 @@ if none @is_acc {
 
 [
   (nested_identifier . (_)@mod . (_)@name .)
-  (member_expression object: (_)@mod property: (_)@name)
+  (member_expression object: [(identifier) (member_expression)]@mod property: (_)@name)
 ] {
   edge @name.type_ref -> @mod.type_ref_member
 }
