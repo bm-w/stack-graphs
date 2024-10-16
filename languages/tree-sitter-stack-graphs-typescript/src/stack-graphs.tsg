@@ -2336,6 +2336,8 @@ if none @is_async {
   ; X._
   (nested_identifier                                 (identifier)@name)
   (nested_identifier                                 (property_identifier)@name)
+  (primary_expression                        object: (identifier)@name)
+  (primary_expression                      property: (property_identifier)@name)
 ] {
   node @name.expr_def
   node expr_def_typeof
@@ -2358,7 +2360,10 @@ if none @is_async {
   edge @name.type_def -> @name.type_def_member
 }
 
-(nested_identifier . (_) @mod) @nested {
+[
+  (nested_identifier . (_) @mod)
+  (member_expression object: (_) @mod)
+] @nested {
   node @nested.expr_def
   node @nested.type_def
 
@@ -2366,12 +2371,18 @@ if none @is_async {
   edge @nested.type_def -> @mod.type_def
 }
 
-(nested_identifier . (_) @mod . (_) @name .) {
+[
+  (nested_identifier . (_) @mod . (_) @name .)
+  (member_expression object: (_) @mod property: (_) @name)
+] {
   edge @mod.expr_def_member -> @name.expr_def
   edge @mod.type_def_member -> @name.type_def
 }
 
-(nested_identifier (_) @name .) @nested {
+[
+  (nested_identifier (_) @name .)
+  (member_expression property: (_) @name)
+] @nested {
   node @nested.expr_def_member
   node @nested.type_def_member
 
@@ -2650,6 +2661,7 @@ if none @is_async {
   (import)
   (member_expression)
   (meta_property)
+  (nested_identifier)
   (new_expression)
   (non_null_expression)
   (null)
@@ -2814,10 +2826,42 @@ if none @is_async {
   (decorator (call_expression function:(member_expression object:(identifier)@name)))
   (decorator (call_expression function:(member_expression object:(member_expression object:(identifier)@name))))
   (decorator (call_expression function:(member_expression object:(member_expression object:(member_expression object:(identifier)@name)))))
+  ; FIXME For whatever reason when a `nested_identifier` appears within
+  ;       another `nested_identifier` it is aliased as `member_expression`.
+  ;       However, the inner `nested_identifier` does not implement the
+  ;       `member_expression` rule, and so an `identifier` appearing as its
+  ;       `object:` does not have the `primary_expression` supertype, and so
+  ;       is not matched by `primary_expression/identifier` above. As a result
+  ;       `nested_identifier` also has “its own restricted expression
+  ;       production” (see the two FIXMEs above), and needs manual unrolling.
+  ;       This many levels might seem excessive, but it was chosen to avoid
+  ;       regressing on `tests/module/very-deep-namespace.ts`.
+  (nested_identifier (member_expression object:(identifier)@name))
+  (nested_identifier (member_expression (member_expression object:(identifier)@name)))
+  (nested_identifier (member_expression (member_expression (member_expression object:(identifier)@name))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression object:(identifier)@name)))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name))))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name)))))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name))))))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name)))))))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name))))))))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name)))))))))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name))))))))))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name)))))))))))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name))))))))))))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name)))))))))))))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name))))))))))))))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name)))))))))))))))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name))))))))))))))))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name)))))))))))))))))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name))))))))))))))))))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name)))))))))))))))))))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name))))))))))))))))))))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name)))))))))))))))))))))))
+  (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name))))))))))))))))))))))))
 ; #dialect tsx
   (nested_identifier (identifier)@name)
   (nested_identifier (member_expression)@name)
-  (member_expression (identifier)@name)
   (nested_type_identifier module:(nested_identifier)@name)
   (internal_module name:(_)@name)
   (jsx_opening_element name: [(identifier) (jsx_namespace_name)]@name)
@@ -3554,14 +3598,9 @@ if none @is_async {
     object: (_)@object
     property: (_)@prop
   )@member_expr
-; #dialect tsx
   (nested_identifier
-    (member_expression)@object
-    (property_identifier)@prop
-  )@member_expr
-  (nested_identifier
-    (identifier)@object
-    (property_identifier)@prop
+    object: (_)@object
+    property: (_)@prop
   )@member_expr
 ; #end
  ] {
@@ -3571,7 +3610,6 @@ if none @is_async {
 
   ; propagate lexical scope
   edge @object.lexical_scope -> @member_expr.lexical_scope
-  ;            ^ WIP: Undefined?
 
   ; reference to property
   attr (@prop.expr_ref) node_reference = @prop
@@ -5605,6 +5643,8 @@ if none @is_acc {
   ; X._, _.X._
   (nested_identifier (identifier)@name)
   (nested_identifier (property_identifier)@name)
+  (member_expression object: (identifier)@name)
+  (member_expression (property_identifier)@name)
 ] {
   node @name.type_ref
   attr (@name.type_ref) node_reference = @name
@@ -5615,16 +5655,25 @@ if none @is_acc {
   edge @name.type_ref_member -> @name.type_ref
 }
 
-(nested_identifier . (_)@mod) @nested {
+[
+  (nested_identifier . (_)@mod)
+  (member_expression object: (_)@mod)
+] @nested {
   node @nested.type_ref
   edge @mod.type_ref -> @nested.type_ref
 }
 
-(nested_identifier . (_)@mod . (_)@name .) {
+[
+  (nested_identifier . (_)@mod . (_)@name .)
+  (member_expression object: (_)@mod property: (_)@name)
+] {
   edge @name.type_ref -> @mod.type_ref_member
 }
 
-(nested_identifier (_)@name .) @nested {
+[
+  (nested_identifier (_)@name .)
+  (member_expression property: (_)@name)
+] @nested {
   node @nested.type_ref_member
   edge @nested.type_ref_member -> @name.type_ref_member
 }
