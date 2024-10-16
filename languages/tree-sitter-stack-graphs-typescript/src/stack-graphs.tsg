@@ -2931,10 +2931,22 @@ if none @is_def {
   (decorator (call_expression function:(member_expression object:(member_expression object:(identifier)@name))))
   (decorator (call_expression function:(member_expression object:(member_expression object:(member_expression object:(identifier)@name)))))
 ; #dialect tsx
-  (member_expression object:(identifier)@name) ; to pick up foo in JSX: <foo.bar.baz />
   (jsx_opening_element name: (identifier)@name)
   (jsx_closing_element name: (identifier)@name)
   (jsx_self_closing_element name: (identifier)@name)
+  ; FIXME See stanza above.
+  (jsx_opening_element name: (member_expression object:(identifier)@name))
+  (jsx_opening_element name: (member_expression (member_expression object:(identifier)@name)))
+  (jsx_opening_element name: (member_expression (member_expression (member_expression object:(identifier)@name))))
+  (jsx_opening_element name: (member_expression (member_expression (member_expression (member_expression object:(identifier)@name)))))
+  (jsx_closing_element name: (member_expression object:(identifier)@name))
+  (jsx_closing_element name: (member_expression (member_expression object:(identifier)@name)))
+  (jsx_closing_element name: (member_expression (member_expression (member_expression object:(identifier)@name))))
+  (jsx_closing_element name: (member_expression (member_expression (member_expression (member_expression object:(identifier)@name)))))
+  (jsx_self_closing_element name: (member_expression object:(identifier)@name))
+  (jsx_self_closing_element name: (member_expression (member_expression object:(identifier)@name)))
+  (jsx_self_closing_element name: (member_expression (member_expression (member_expression object:(identifier)@name))))
+  (jsx_self_closing_element name: (member_expression (member_expression (member_expression (member_expression object:(identifier)@name)))))
 ; #end
 ] {
 if none @is_def {
