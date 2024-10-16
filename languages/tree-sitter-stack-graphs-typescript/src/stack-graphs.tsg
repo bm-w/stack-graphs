@@ -2795,6 +2795,7 @@ if none @is_async {
 
 [
   (primary_expression/identifier)@name
+  (nested_identifier (identifier)@name)
   ; FIXME expansion of _lhs_expression/identifier and _augmented_assignment_lhs
   (for_in_statement ["var" "let" "const"]?@is_def left:(identifier)@name)
   (assignment_expression left:(identifier)@name)
@@ -2863,14 +2864,12 @@ if none @is_async {
   (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name)))))))))))))))))))))))
   (nested_identifier (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression (member_expression object:(identifier)@name))))))))))))))))))))))))
 ; #dialect tsx
-  (nested_identifier (identifier)@name)
   (internal_module name: (identifier)@name)
   (jsx_opening_element name: [(identifier) (jsx_namespace_name)]@name)
   (jsx_closing_element name: [(identifier) (jsx_namespace_name)]@name)
   (jsx_self_closing_element name: [(identifier) (jsx_namespace_name)]@name)
-  ; FIXME For whatever when the name of JSX element is a
-  ;       `nested_identifier` it is aliased as `member_expression`.
-  ;       See the above FIXME.
+  ; FIXME For whatever when the name of a JSX element is a `nested_identifier`
+  ;       it is aliased as `member_expression`. See the above FIXME.
   (jsx_opening_element name: (member_expression object:(identifier)@name))
   (jsx_opening_element name: (member_expression (member_expression object:(identifier)@name)))
   (jsx_opening_element name: (member_expression (member_expression (member_expression object:(identifier)@name))))
