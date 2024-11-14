@@ -618,7 +618,7 @@ impl<'a> Builder<'a> {
 
     /// Executes this builder.
     pub fn build(
-        mut self,
+        self,
         globals: &'a Variables<'a>,
         cancellation_flag: &dyn CancellationFlag,
     ) -> Result<(), BuildError> {
@@ -635,11 +635,24 @@ impl<'a> Builder<'a> {
                 .parse(self.source, None)
                 .ok_or(BuildError::ParseError)?
         };
-        let parse_errors = ParseError::into_all(tree);
-        if parse_errors.errors().len() > 0 {
-            return Err(BuildError::ParseErrors(parse_errors));
+        self.build_with_tree(&tree, globals, cancellation_flag)
+    }
+
+    /// Executes this builder with a given [`Tree`][tree_sitter::Tree].
+    pub fn build_with_tree(
+        mut self,
+        tree: &tree_sitter::Tree,
+        globals: &'a Variables<'a>,
+        cancellation_flag: &dyn CancellationFlag,
+    ) -> Result<(), BuildError> {
+        if *tree.language() != self.sgl.language {
+            // TODO: More suitable error?
+            return Err(BuildError::ParseError);
         }
-        let tree = parse_errors.into_tree();
+
+        if ParseError::first(&tree).is_some() {
+            return Err(BuildError::ParseErrors(ParseError::into_all(tree.clone())));
+        }
 
         let mut globals = Variables::nested(globals);
 
@@ -673,7 +686,7 @@ impl<'a> Builder<'a> {
         // (1) this method takes ownership of the Builder; and
         // (2) it returns no values connected to 'a.
         // These together guarantee that no values connected to the lifetime 'a outlive the Tree.
-        let tree: &'a tree_sitter::Tree = unsafe { transmute(&tree) };
+        let tree: &'a tree_sitter::Tree = unsafe { transmute(tree) };
         self.sgl.tsg.execute_into(
             &mut self.graph,
             tree,
